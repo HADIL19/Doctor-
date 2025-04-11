@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Calendar, Clock, AlertCircle, Activity, User, ThumbsUp } from 'lucide-react';
 
 export default function Dashboard() {
