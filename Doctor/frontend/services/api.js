@@ -1,5 +1,5 @@
 // src/services/api.js
-
+import axios from 'axios';
 const API_URL = 'http://localhost:5000/api';
 
 /**
@@ -28,7 +28,7 @@ async function fetchAPI(endpoint, options = {}) {
 
     // Handle HTTP errors
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json().catch(() => ({ message: 'Une erreur réseau est survenue' }));
       throw new Error(error.message || 'Une erreur est survenue');
     }
 
@@ -60,6 +60,7 @@ export const authService = {
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    window.location.href = '/login';
   },
   
   getCurrentUser: () => {
@@ -77,7 +78,23 @@ export const authService = {
  */
 export const dashboardService = {
   getDashboardData: async () => {
-    return await fetchAPI('/dashboard');
+    try {
+      const data = await fetchAPI('/dashboard');
+      return {
+        stats: {
+          appointmentsToday: data.stats.appointmentsToday || 0,
+          pendingAppointments: data.stats.pendingAppointments || 0,
+          activePatients: data.stats.activePatients || 0,
+          satisfactionRate: data.stats.satisfactionRate || "0%"
+        },
+        upcomingAppointments: data.upcomingAppointments || [],
+        recentActivities: data.recentActivities || [],
+        alerts: data.alerts || []
+      };
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      throw error;
+    }
   }
 };
 
@@ -166,3 +183,15 @@ export const emergencyService = {
     });
   }
 };
+
+// 🗓️ Fetch appointments by date
+export const fetchAppointmentsByDate = async (date) => {
+    try {
+      const response = await axios.get(`${API_URL}/appointments/${date}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+      throw error;
+    }
+  };
+  

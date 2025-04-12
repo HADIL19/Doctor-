@@ -4,14 +4,13 @@ import { Link } from 'react-router-dom';
 
 export default function PatientList() {
   // Sample patients data
-  const [patients, setPatients] = useState([
+  const [patients] = useState([
     {
       id: 1,
       name: "Marie Laurent",
       age: 42,
       gender: "F",
       lastVisit: "12/03/2025",
-      condition: "Hypertension",
       status: "Stable"
     },
     {
@@ -20,7 +19,6 @@ export default function PatientList() {
       age: 65,
       gender: "M",
       lastVisit: "05/04/2025",
-      condition: "Diabète type 2",
       status: "Suivi régulier"
     },
     {
@@ -29,7 +27,6 @@ export default function PatientList() {
       age: 28,
       gender: "F",
       lastVisit: "27/02/2025",
-      condition: "Asthme",
       status: "Contrôlé"
     },
     {
@@ -38,7 +35,6 @@ export default function PatientList() {
       age: 55,
       gender: "M",
       lastVisit: "08/04/2025",
-      condition: "Arythmie cardiaque",
       status: "Sous traitement"
     },
     {
@@ -47,7 +43,6 @@ export default function PatientList() {
       age: 34,
       gender: "F",
       lastVisit: "01/04/2025",
-      condition: "Migraine chronique",
       status: "En amélioration"
     },
     {
@@ -56,7 +51,6 @@ export default function PatientList() {
       age: 71,
       gender: "M",
       lastVisit: "22/03/2025",
-      condition: "Arthrite",
       status: "Stable"
     },
     {
@@ -65,7 +59,6 @@ export default function PatientList() {
       age: 47,
       gender: "F",
       lastVisit: "30/03/2025",
-      condition: "Hypothyroïdie",
       status: "Suivi régulier"
     }
   ]);
@@ -119,9 +112,7 @@ export default function PatientList() {
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Age/Genre
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Condition
-              </th>
+
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Statut
               </th>

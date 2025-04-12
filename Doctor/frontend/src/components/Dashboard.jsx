@@ -1,35 +1,103 @@
+import { useState, useEffect } from 'react';
 import { Calendar, Clock, AlertCircle, Activity, User, ThumbsUp } from 'lucide-react';
+import { dashboardService } from '../../services/api';
 
 export default function Dashboard() {
-  // Sample stats for the dashboard
+  const [dashboardData, setDashboardData] = useState({
+    stats: {
+      appointmentsToday: 0,
+      pendingAppointments: 0,
+      activePatients: 0,
+      satisfactionRate: "0%"
+    },
+    upcomingAppointments: [],
+    recentActivities: [],
+    alerts: []
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const data = await dashboardService.getDashboardData();
+        setDashboardData(data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError('Failed to load dashboard data. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  // Map backend stats to UI stats format
   const stats = [
-    { title: "Rendez-vous aujourd'hui", value: 8, icon: <Calendar size={24} className="text-blue-500" />, color: "bg-blue-50 border-blue-100" },
-    { title: "En attente", value: 3, icon: <Clock size={24} className="text-amber-500" />, color: "bg-amber-50 border-amber-100" },
-    { title: "Patients actifs", value: 124, icon: <User size={24} className="text-green-500" />, color: "bg-green-50 border-green-100" },
-    { title: "Taux de satisfaction", value: "98%", icon: <ThumbsUp size={24} className="text-purple-500" />, color: "bg-purple-50 border-purple-100" }
+    { 
+      title: "Rendez-vous aujourd'hui", 
+      value: dashboardData.stats.appointmentsToday, 
+      icon: <Calendar size={24} className="text-blue-500" />, 
+      color: "bg-blue-50 border-blue-100" 
+    },
+    { 
+      title: "En attente", 
+      value: dashboardData.stats.pendingAppointments, 
+      icon: <Clock size={24} className="text-amber-500" />, 
+      color: "bg-amber-50 border-amber-100" 
+    },
+    { 
+      title: "Patients actifs", 
+      value: dashboardData.stats.activePatients, 
+      icon: <User size={24} className="text-green-500" />, 
+      color: "bg-green-50 border-green-100" 
+    },
+    { 
+      title: "Taux de satisfaction", 
+      value: dashboardData.stats.satisfactionRate, 
+      icon: <ThumbsUp size={24} className="text-purple-500" />, 
+      color: "bg-purple-50 border-purple-100" 
+    }
   ];
 
-  // Sample upcoming appointments
-  const upcomingAppointments = [
-    { id: 1, patient: "Marie Laurent", time: "09:00", date: "Aujourd'hui", type: "Check-up annuel" },
-    { id: 2, patient: "Thomas Dubois", time: "10:00", date: "Aujourd'hui", type: "Consultation de suivi" },
-    { id: 3, patient: "Sophie Martin", time: "11:15", date: "Aujourd'hui", type: "Renouvellement d'ordonnance" }
-  ];
+  // Function to determine alert priority color
+  const getAlertStyles = (priority) => {
+    switch (priority) {
+      case 'high':
+        return { bg: 'bg-red-50', text: 'text-red-500' };
+      case 'medium':
+        return { bg: 'bg-amber-50', text: 'text-amber-500' };
+      default:
+        return { bg: 'bg-blue-50', text: 'text-blue-500' };
+    }
+  };
 
-  // Sample recent activities
-  const recentActivities = [
-    { id: 1, message: "Dossier de Sophie Martin mis à jour", time: "Il y a 20 minutes" },
-    { id: 2, message: "Nouveau rendez-vous avec Lucas Moreau", time: "Il y a 1 heure" },
-    { id: 3, message: "Résultats d'analyses reçus pour Emma Petit", time: "Il y a 2 heures" },
-    { id: 4, message: "Message de rappel envoyé à tous les RDV de demain", time: "Il y a 3 heures" }
-  ];
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto p-6 flex justify-center">
+        <p>Chargement du tableau de bord...</p>
+      </div>
+    );
+  }
 
-  // Sample alerts
-  const alerts = [
-    { id: 1, message: "5 patients nécessitent un renouvellement d'ordonnance cette semaine", priority: "medium" },
-    { id: 2, message: "Résultats d'analyses urgents pour Thomas Dubois", priority: "high" },
-    { id: 3, message: "Mise à jour du système prévue ce weekend", priority: "low" }
-  ];
+  if (error) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-2 px-4 py-2 bg-red-100 hover:bg-red-200 rounded text-sm"
+          >
+            Réessayer
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -63,24 +131,30 @@ export default function Dashboard() {
               <h3 className="text-lg font-medium text-gray-800">Rendez-vous à venir</h3>
               <a href="#" className="text-blue-600 text-sm hover:underline">Voir tous</a>
             </div>
-            <div className="divide-y divide-gray-200">
-              {upcomingAppointments.map((appointment) => (
-                <div key={appointment.id} className="px-6 py-4 flex items-center">
-                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-4">
-                    <span className="text-blue-600 font-medium">{appointment.time}</span>
+            {dashboardData.upcomingAppointments.length > 0 ? (
+              <div className="divide-y divide-gray-200">
+                {dashboardData.upcomingAppointments.map((appointment) => (
+                  <div key={appointment.id} className="px-6 py-4 flex items-center">
+                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-4">
+                      <span className="text-blue-600 font-medium">{appointment.time}</span>
+                    </div>
+                    <div className="flex-grow">
+                      <p className="font-medium text-gray-900">{appointment.patient}</p>
+                      <p className="text-sm text-gray-500">{appointment.type}</p>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                        {appointment.date === new Date().toISOString().split('T')[0] ? 'Aujourd\'hui' : appointment.date}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex-grow">
-                    <p className="font-medium text-gray-900">{appointment.patient}</p>
-                    <p className="text-sm text-gray-500">{appointment.type}</p>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                      {appointment.date}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-6 text-center text-gray-500">
+                <p>Aucun rendez-vous à venir aujourd'hui</p>
+              </div>
+            )}
           </div>
 
           {/* Patient distribution chart placeholder */}
@@ -100,20 +174,23 @@ export default function Dashboard() {
             <div className="px-6 py-4 border-b border-gray-200">
               <h3 className="text-lg font-medium text-gray-800">Alertes</h3>
             </div>
-            <div className="divide-y divide-gray-200">
-              {alerts.map((alert) => (
-                <div key={alert.id} className={`px-6 py-4 flex items-start ${
-                  alert.priority === 'high' ? 'bg-red-50' : 
-                  alert.priority === 'medium' ? 'bg-amber-50' : 'bg-blue-50'
-                }`}>
-                  <AlertCircle className={`flex-shrink-0 mr-3 ${
-                    alert.priority === 'high' ? 'text-red-500' : 
-                    alert.priority === 'medium' ? 'text-amber-500' : 'text-blue-500'
-                  }`} size={20} />
-                  <p className="text-sm text-gray-700">{alert.message}</p>
-                </div>
-              ))}
-            </div>
+            {dashboardData.alerts.length > 0 ? (
+              <div className="divide-y divide-gray-200">
+                {dashboardData.alerts.map((alert) => {
+                  const alertStyle = getAlertStyles(alert.priority);
+                  return (
+                    <div key={alert.id} className={`px-6 py-4 flex items-start ${alertStyle.bg}`}>
+                      <AlertCircle className={`flex-shrink-0 mr-3 ${alertStyle.text}`} size={20} />
+                      <p className="text-sm text-gray-700">{alert.message}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="p-6 text-center text-gray-500">
+                <p>Aucune alerte active</p>
+              </div>
+            )}
           </div>
 
           {/* Recent Activity */}
@@ -121,18 +198,30 @@ export default function Dashboard() {
             <div className="px-6 py-4 border-b border-gray-200">
               <h3 className="text-lg font-medium text-gray-800">Activité récente</h3>
             </div>
-            <div className="divide-y divide-gray-200">
-              {recentActivities.map((activity) => (
-                <div key={activity.id} className="px-6 py-4">
-                  <p className="text-sm text-gray-700">{activity.message}</p>
-                  <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                </div>
-              ))}
-            </div>
+            {dashboardData.recentActivities.length > 0 ? (
+              <div className="divide-y divide-gray-200">
+                {dashboardData.recentActivities.map((activity) => (
+                  <div key={activity.id} className="px-6 py-4">
+                    <p className="text-sm text-gray-700">{activity.message}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(activity.created_at).toLocaleString('fr-FR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        day: '2-digit',
+                        month: '2-digit',
+                      })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-6 text-center text-gray-500">
+                <p>Aucune activité récente</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
-

@@ -1,12 +1,12 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useState } from 'react';
-import { Calendar, Users, LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { Menu, LogOut } from 'lucide-react';
+
 import Dashboard from './components/Dashboard';
 import PatientList from './components/PatientList';
 import Planning from './components/Planning';
 import EmergencyManagement from './components/EmergencyManagement';
-
+import Sidebar from './components/Sidebar';
 
 function DoctorInterface() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -16,7 +16,6 @@ function DoctorInterface() {
     setSidebarOpen(!sidebarOpen);
   };
 
-  // Fonction pour obtenir le titre de la page active
   const getPageTitle = () => {
     if (location.pathname.includes('/planning')) return 'Planning';
     if (location.pathname.includes('/patients')) return 'Liste des patients';
@@ -25,56 +24,8 @@ function DoctorInterface() {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar - mobile version (hidden by default) */}
-      <div className={`fixed inset-y-0 left-0 z-30 w-64 bg-blue-800 transition-transform duration-300 ease-in-out transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}>
-        <div className="flex items-center justify-between p-4 text-white">
-          <h2 className="text-xl font-bold">MedPortal</h2>
-          <button onClick={toggleSidebar} className="md:hidden text-white">
-            <X size={24} />
-          </button>
-        </div>
-
-        <nav className="mt-8">
-          <div className="px-4 mb-8">
-            <div className="p-2 rounded-lg mb-2">
-              <NavLink 
-                to="/planning" 
-                className={({ isActive }) => 
-                  `flex items-center text-white p-2 rounded-md ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700'}`
-                }
-                onClick={() => setSidebarOpen(false)}
-              >
-                <Calendar className="mr-3" size={20} />
-                <span className="font-medium">Planning</span>
-              </NavLink>
-            </div>
-            <div className="p-2 rounded-lg mb-2">
-              <NavLink 
-                to="/patients" 
-                className={({ isActive }) => 
-                  `flex items-center text-white p-2 rounded-md ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700'}`
-                }
-                onClick={() => setSidebarOpen(false)}
-              >
-                <Users className="mr-3" size={20} />
-                <span className="font-medium">Liste des patients</span>
-              </NavLink>
-            </div>
-            <div className="p-2 rounded-lg">
-              <NavLink 
-                to="/dashboard" 
-                className={({ isActive }) => 
-                  `flex items-center text-white p-2 rounded-md ${isActive ? 'bg-blue-700' : 'hover:bg-blue-700'}`
-                }
-                onClick={() => setSidebarOpen(false)}
-              >
-                <LayoutDashboard className="mr-3" size={20} />
-                <span className="font-medium">Dashboard</span>
-              </NavLink>
-            </div>
-          </div>
-        </nav>
-      </div>
+      {/* Sidebar component */}
+      <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -100,7 +51,7 @@ function DoctorInterface() {
           </div>
         </header>
 
-        {/* Page content - Outlet rend le composant actif de la route */}
+        {/* Page content */}
         <main className="flex-1 overflow-y-auto p-6 bg-gray-100">
           <Outlet />
         </main>
@@ -113,10 +64,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Redirection de la racine vers le dashboard */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        
-        {/* Routes principales avec DoctorInterface comme layout */}
+
         <Route element={<DoctorInterface />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/planning" element={<Planning />} />
